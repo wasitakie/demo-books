@@ -1,23 +1,54 @@
-name: Validate server application
+name: Deploy Pages
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
-# Private Drive covers require a Node.js host. GitHub Pages cannot run the image API.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  validate:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
+
+      - uses: actions/configure-pages@v5
+
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test && pnpm lint && pnpm build && pnpm typecheck
+
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /demo-books
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          GOOGLE_SHEET_RANGE: ${{ vars.GOOGLE_SHEET_RANGE }}
+          GOOGLE_SHEET_GID: ${{ vars.GOOGLE_SHEET_GID }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+      - uses: actions/deploy-pages@v4
+        id: deployment
