@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getCatalog } from "@/lib/catalog";
 import { Catalog } from "@/components/catalog";
 import { Arrow } from "@/components/icons";
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 export default async function Home() {
   const { books, status } = await getCatalog();
   const contacts = getShopContacts();

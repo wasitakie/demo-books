@@ -24,7 +24,7 @@ export async function getCatalog(publicCovers = true): Promise<{books: Book[]; s
       failure = 'Invalid GOOGLE_SHEET_GID. Use the numeric gid from the spreadsheet URL.';
       if (!/^\d+$/.test(gid)) throw new Error('Invalid sheet gid');
       failure = 'Could not read spreadsheet tabs. Check network access and spreadsheet permissions.';
-      const metadata = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets.properties(sheetId,title)`, {headers: {Authorization: `Bearer ${token.token}`}, cache: 'no-store', signal: AbortSignal.timeout(10000)});
+      const metadata = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets.properties(sheetId,title)`, {headers: {Authorization: `Bearer ${token.token}`}, cache: 'force-cache', signal: AbortSignal.timeout(10000)});
       if (!metadata.ok) {
         failure = `Google Sheets metadata returned HTTP ${metadata.status}. Check spreadsheet access.`;
         throw new Error('Spreadsheet metadata rejected');
@@ -39,7 +39,7 @@ export async function getCatalog(publicCovers = true): Promise<{books: Book[]; s
     }
     const range = encodeURIComponent(requestedRange);
     failure = 'Google Sheets request failed or timed out. Check network access and try again.';
-    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}?valueRenderOption=UNFORMATTED_VALUE`, {headers: {Authorization: `Bearer ${token.token}`}, cache: 'no-store', signal: AbortSignal.timeout(10000)});
+    const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${range}?valueRenderOption=UNFORMATTED_VALUE`, {headers: {Authorization: `Bearer ${token.token}`}, cache: 'force-cache', signal: AbortSignal.timeout(10000)});
     if (!response.ok) {
       failure = response.status === 400
         ? 'Google Sheets rejected the range. Check GOOGLE_SHEET_RANGE and GOOGLE_SHEET_GID; the range must include the header row.'
@@ -49,7 +49,7 @@ export async function getCatalog(publicCovers = true): Promise<{books: Book[]; s
     failure = 'Invalid Google Sheets data. Check the Books tab and required column headers.';
     const data = await response.json();
     const books = parseBooks(data.values || [], process.env.SHOP_ORDER_URL).map(book => publicCovers && driveFileId(book.cover)
-      ? {...book, cover: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/covers/${encodeURIComponent(book.id)}/`}
+      ? {...book, cover: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/covers/${encodeURIComponent(book.id)}`}
       : book);
     return {books, status: 'live'};
   } catch {

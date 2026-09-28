@@ -4,17 +4,24 @@ import { driveFileId } from "@/lib/books";
 import { normalizePrivateKey } from "@/lib/google-private-key";
 
 export const runtime = "nodejs";
+export const dynamic = "force-static";
+export const dynamicParams = false;
 
-const errorResponse = (status: number) =>
-  new Response(null, {
-    status,
-    headers: { "Cache-Control": "no-store" },
-  });
+export async function generateStaticParams() {
+  const { books } = await getCatalog(false);
+  return books.filter(book => driveFileId(book.cover)).map(book => ({ bookId: book.id }));
+}
+
+const errorResponse = (status: number): never => {
+  // Fail the export instead of publishing an empty or broken image.
+  throw new Error(`Could not export an approved book cover (HTTP ${status}). Check Drive access and image format.`);
+};
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ bookId: string }> },
 ) {
+  let stage = "read catalog";
   try {
     const { bookId } = await params;
     // The parser strips unapproved covers. Only published, approved images can be served.
@@ -24,6 +31,7 @@ export async function GET(
     const fileId = book && driveFileId(book.cover);
     if (!fileId) return errorResponse(404);
 
+    stage = "authenticate Drive";
     const auth = new JWT({
       email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim(),
       key: normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY),
@@ -37,15 +45,16 @@ export async function GET(
     const resourceKey = new URL(book.cover).searchParams.get("resourcekey");
     if (resourceKey)
       headers["X-Goog-Drive-Resource-Keys"] = `${fileId}/${resourceKey}`;
-    const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`,
-      {
-        headers,
-        cache: "no-store",
-        signal: AbortSignal.timeout(20000),
-      },
-    );
-    if (!response.ok) return errorResponse(response.status === 404 ? 404 : 502);
+    stage = "download image";
+    // Download binary data outside Next's data cache (covers may exceed its 2 MB limit).
+    const response = await auth.request<ArrayBuffer>({
+      url: `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`,
+      headers,
+      responseType: "arraybuffer",
+      timeout: 20000,
+      validateStatus: () => true,
+    });
+    if (response.status !== 200) return errorResponse(response.status);
     const contentType =
       response.headers.get("content-type")?.split(";")[0].trim() || "";
     if (
@@ -57,11 +66,11 @@ export async function GET(
         "image/avif",
       ].includes(contentType)
     ) {
-      await response.body?.cancel();
       return errorResponse(415);
     }
-    // Stream to the visitor without saving a local image or exposing Google credentials.
-    return new Response(response.body, {
+    // Export the approved image as a static file; Google credentials stay at build time.
+    stage = "export image bytes";
+    return new Response(new Uint8Array(response.data), {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "no-store",
@@ -69,7 +78,8 @@ export async function GET(
         "Content-Disposition": "inline",
       },
     });
-  } catch {
-    return errorResponse(502);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Could not export an approved book cover")) throw error;
+    throw new Error(`Cover export failed at stage: ${stage} (${error instanceof Error ? error.name : "unknown error"}).`);
   }
 }
