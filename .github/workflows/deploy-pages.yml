@@ -34,17 +34,20 @@ jobs:
           cache: pnpm
 
       - uses: actions/configure-pages@v5
+        id: pages
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm test
+      - run: pnpm lint
       - run: pnpm build
         env:
-          NEXT_PUBLIC_BASE_PATH: /demo-books
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-          GOOGLE_SHEET_RANGE: ${{ vars.GOOGLE_SHEET_RANGE }}
-          GOOGLE_SHEET_GID: ${{ vars.GOOGLE_SHEET_GID }}
+          NEXT_PUBLIC_CATALOG_CSV_URL: ${{ vars.NEXT_PUBLIC_CATALOG_CSV_URL }}
+          SHOP_ORDER_URL: ${{ vars.SHOP_ORDER_URL }}
+          SHOP_FACEBOOK_URL: ${{ vars.SHOP_FACEBOOK_URL }}
+          SHOP_LINE_URL: ${{ vars.SHOP_LINE_URL }}
+          SHOP_EMAIL: ${{ vars.SHOP_EMAIL }}
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

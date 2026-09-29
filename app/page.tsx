@@ -1,12 +1,10 @@
 import { getShopContacts } from "@/lib/contact";
 import Image from "next/image";
 import Link from "next/link";
-import { getCatalog } from "@/lib/catalog";
-import { Catalog } from "@/components/catalog";
+import { safeUrl } from "@/lib/books";
+import { PublicCatalog } from "@/components/public-catalog";
 import { Arrow } from "@/components/icons";
-export const dynamic = "force-static";
-export default async function Home() {
-  const { books, status } = await getCatalog();
+export default function Home() {
   const contacts = getShopContacts();
   return (
     <>
@@ -47,7 +45,7 @@ export default async function Home() {
             />
           </div>
         </section>
-        <Catalog books={books} status={status} contacts={contacts} />
+        <PublicCatalog contacts={contacts} shopOrderUrl={safeUrl(process.env.SHOP_ORDER_URL || "")} />
       </main>
       <footer id="about">
         <div className="brand">

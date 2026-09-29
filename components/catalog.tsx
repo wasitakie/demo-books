@@ -24,6 +24,7 @@ function Cover({ book }: { book: Book }) {
   if (book.cover && !failed)
     return (
       <div className="cover">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={book.cover}
           onError={() => setFailed(true)}
@@ -32,7 +33,7 @@ function Cover({ book }: { book: Book }) {
           referrerPolicy="no-referrer"
         />
       </div>
-    ); // eslint-disable-line @next/next/no-img-element
+    );
   if (demoIndex >= 0)
     return (
       <div
