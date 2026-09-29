@@ -1,4 +1,4 @@
-> เวอร์ชันปัจจุบันอ่าน CSV สาธารณะในเบราว์เซอร์สำหรับ GitHub Pages ดู [คู่มือใหม่](docs/github-pages-csv.md) ส่วนคำอธิบาย server-side Sheets/Drive ด้านล่างเป็นระบบเดิม
+> เวอร์ชันปัจจุบันใช้ชีตส่วนตัวไฟล์เดียวและ GitHub Actions อ่าน [คู่มือปัจจุบัน](docs/private-sheet-pages.md) ส่วนเนื้อหา CSV และระบบก่อนหน้าด้านล่างเป็นประวัติการตั้งค่า
 
 # ระหว่างบรรทัด — Between the Lines
 

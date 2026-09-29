@@ -1,3 +1,5 @@
+> คู่มือนี้เป็นเวอร์ชันเก่า ปัจจุบันใช้ [ชีตส่วนตัว](private-sheet-pages.md)
+
 # GitHub Pages + Public CSV (current setup)
 เว็บอ่าน CSV ในเบราว์เซอร์ทุกครั้งที่เปิด/รีเฟรช ไม่ต้อง build ใหม่เมื่อเปลี่ยนรายการหนังสือ และไม่อ่าน Google credentials
 ลิงก์เริ่มต้นใช้ spreadsheet 14Wo6Nz65zyphYzUyePbChMaTqGqpvlw3_KvDcxE55Jc แท็บ gid=1680909374

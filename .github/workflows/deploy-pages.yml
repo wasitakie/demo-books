@@ -3,6 +3,8 @@ name: Deploy Pages
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -40,9 +42,13 @@ jobs:
 
       - run: pnpm test
       - run: pnpm lint
-      - run: pnpm build
+      - run: npm run build
         env:
-          NEXT_PUBLIC_CATALOG_CSV_URL: ${{ vars.NEXT_PUBLIC_CATALOG_CSV_URL }}
+          GOOGLE_SHEET_ID: 1yQQD7nZDwaK_qRpz6jw9WlEKu2ek6VYB1HNk4aWKs7s
+          GOOGLE_SHEET_GID: "257320421"
+          GOOGLE_SHEET_RANGE: A1:Z1000
+          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
           SHOP_ORDER_URL: ${{ vars.SHOP_ORDER_URL }}
           SHOP_FACEBOOK_URL: ${{ vars.SHOP_FACEBOOK_URL }}
           SHOP_LINE_URL: ${{ vars.SHOP_LINE_URL }}
